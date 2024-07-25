@@ -23,193 +23,292 @@ import {
   FormControl,
   FormLabel,
   Input,
-  Textarea,
+  Image,
 } from "@chakra-ui/react";
-import { EditIcon } from "@chakra-ui/icons";
+import { EditIcon, AddIcon, DeleteIcon } from "@chakra-ui/icons";
 
 function App() {
-  // State for tracking personal, education, and work information
-  const [personalInfo, setPersonalInfo] = useState({
+  // State for the CV information
+  const [profile, setProfile] = useState({
     name: "John Doe",
+    title: "Software Engineer",
     email: "john.doe@example.com",
     phone: "+123456789",
+    photo:
+      "https://via.placeholder.com/150",
   });
-  const [educationInfo, setEducationInfo] = useState({
-    institution: "XYZ University",
-    degree: "Bachelor of Science",
-    graduationYear: "2024",
-  });
-  const [workInfo, setWorkInfo] = useState({
-    company: "ABC Corp",
-    role: "Software Developer",
-    duration: "2022 - Present",
-  });
+
+  const [education, setEducation] = useState([
+    {
+      institution: "XYZ University",
+      degree: "Bachelor of Science",
+      graduationYear: "2024",
+    },
+  ]);
+
+  const [workExperience, setWorkExperience] = useState([
+    {
+      company: "ABC Corp",
+      role: "Software Developer",
+      duration: "2022 - Present",
+    },
+  ]);
 
   // Disclosure hooks for modals
-  const {
-    isOpen: isPersonalInfoOpen,
-    onOpen: onPersonalInfoOpen,
-    onClose: onPersonalInfoClose,
-  } = useDisclosure();
-  const {
-    isOpen: isEducationInfoOpen,
-    onOpen: onEducationInfoOpen,
-    onClose: onEducationInfoClose,
-  } = useDisclosure();
-  const {
-    isOpen: isWorkInfoOpen,
-    onOpen: onWorkInfoOpen,
-    onClose: onWorkInfoClose,
-  } = useDisclosure();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [activeSection, setActiveSection] = useState(null);
+  const [activeIndex, setActiveIndex] = useState(null);
+  const [formData, setFormData] = useState({});
 
-  // Handlers for saving information
-  const handleSavePersonalInfo = (newInfo) => {
-    setPersonalInfo(newInfo);
-    onPersonalInfoClose();
+  // Function to handle opening the modal for editing
+  const handleEditClick = (section, index = null) => {
+    setActiveSection(section);
+    setActiveIndex(index);
+    if (section === "profile") {
+      setFormData(profile);
+    } else if (section === "education") {
+      setFormData(index !== null ? education[index] : {});
+    } else if (section === "workExperience") {
+      setFormData(index !== null ? workExperience[index] : {});
+    }
+    onOpen();
   };
 
-  const handleSaveEducationInfo = (newInfo) => {
-    setEducationInfo(newInfo);
-    onEducationInfoClose();
+  // Function to handle saving the form data
+  const handleSave = () => {
+    if (activeSection === "profile") {
+      setProfile(formData);
+    } else if (activeSection === "education") {
+      if (activeIndex !== null) {
+        setEducation((prev) =>
+          prev.map((edu, i) => (i === activeIndex ? formData : edu))
+        );
+      } else {
+        setEducation((prev) => [...prev, formData]);
+      }
+    } else if (activeSection === "workExperience") {
+      if (activeIndex !== null) {
+        setWorkExperience((prev) =>
+          prev.map((work, i) => (i === activeIndex ? formData : work))
+        );
+      } else {
+        setWorkExperience((prev) => [...prev, formData]);
+      }
+    }
+    onClose();
   };
 
-  const handleSaveWorkInfo = (newInfo) => {
-    setWorkInfo(newInfo);
-    onWorkInfoClose();
+  // Function to handle form input change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Functions to add and remove sections
+  const addSection = (section) => {
+    handleEditClick(section);
+  };
+
+  const removeSection = (section, index) => {
+    if (section === "education") {
+      setEducation((prev) => prev.filter((_, i) => i !== index));
+    } else if (section === "workExperience") {
+      setWorkExperience((prev) => prev.filter((_, i) => i !== index));
+    }
   };
 
   return (
     <Container maxW="container.md" py={6}>
-      {/* Personal Information Section */}
-      <Section
-        title="Personal Information"
-        
-        content={
-          <>
-            <Text>Name: {personalInfo.name}</Text>
-            <Text>Email: {personalInfo.email}</Text>
-            <Text>Phone: {personalInfo.phone}</Text>
-          </>
-        }
-        onEdit={onPersonalInfoOpen}
-      />
+      {/* Profile Section */}
+      <Section title="Profile">
+        <Image
+          src={profile.photo}
+          alt="Profile"
+          boxSize="150px"
+          objectFit="cover"
+          mb={4}
+          onClick={() => handleEditClick("profile")}
+          cursor="pointer"
+        />
+        <EditableField
+          label="Name"
+          value={profile.name}
+          onEdit={() => handleEditClick("profile")}
+        />
+        <EditableField
+          label="Title"
+          value={profile.title}
+          onEdit={() => handleEditClick("profile")}
+        />
+        <EditableField
+          label="Email"
+          value={profile.email}
+          onEdit={() => handleEditClick("profile")}
+        />
+        <EditableField
+          label="Phone"
+          value={profile.phone}
+          onEdit={() => handleEditClick("profile")}
+        />
+      </Section>
 
-      {/* Education Information Section */}
-      <Section
-        title="Education Information"
-        content={
-          <>
-            <Text>Institution: {educationInfo.institution}</Text>
-            <Text>Degree: {educationInfo.degree}</Text>
-            <Text>Graduation Year: {educationInfo.graduationYear}</Text>
-          </>
-        }
-        onEdit={onEducationInfoOpen}
-      />
+      {/* Education Section */}
+      <Section title="Education">
+        {education.map((edu, index) => (
+          <Box key={index} mb={4} position="relative">
+            <EditableField
+              label="Institution"
+              value={edu.institution}
+              onEdit={() => handleEditClick("education", index)}
+            />
+            <EditableField
+              label="Degree"
+              value={edu.degree}
+              onEdit={() => handleEditClick("education", index)}
+            />
+            <EditableField
+              label="Graduation Year"
+              value={edu.graduationYear}
+              onEdit={() => handleEditClick("education", index)}
+            />
+            <IconButton
+              icon={<DeleteIcon />}
+              position="absolute"
+              top="4px"
+              right="4px"
+              size="sm"
+              variant="ghost"
+              colorScheme="red"
+              aria-label="Delete"
+              onClick={() => removeSection("education", index)}
+            />
+          </Box>
+        ))}
+        <Button
+          leftIcon={<AddIcon />}
+          colorScheme="blue"
+          variant="outline"
+          onClick={() => addSection("education")}
+        >
+          Add Education
+        </Button>
+      </Section>
 
-      {/* Work Experience Information Section */}
-      <Section
-        title="Work Experience"
-        content={
-          <>
-            <Text>Company: {workInfo.company}</Text>
-            <Text>Role: {workInfo.role}</Text>
-            <Text>Duration: {workInfo.duration}</Text>
-          </>
-        }
-        onEdit={onWorkInfoOpen}
-      />
+      {/* Work Experience Section */}
+      <Section title="Work Experience">
+        {workExperience.map((work, index) => (
+          <Box key={index} mb={4} position="relative">
+            <EditableField
+              label="Company"
+              value={work.company}
+              onEdit={() => handleEditClick("workExperience", index)}
+            />
+            <EditableField
+              label="Role"
+              value={work.role}
+              onEdit={() => handleEditClick("workExperience", index)}
+            />
+            <EditableField
+              label="Duration"
+              value={work.duration}
+              onEdit={() => handleEditClick("workExperience", index)}
+            />
+            <IconButton
+              icon={<DeleteIcon />}
+              position="absolute"
+              top="4px"
+              right="4px"
+              size="sm"
+              variant="ghost"
+              colorScheme="red"
+              aria-label="Delete"
+              onClick={() => removeSection("workExperience", index)}
+            />
+          </Box>
+        ))}
+        <Button
+          leftIcon={<AddIcon />}
+          colorScheme="blue"
+          variant="outline"
+          onClick={() => addSection("workExperience")}
+        >
+          Add Work Experience
+        </Button>
+      </Section>
 
-      {/* Modals for Editing Information */}
+      {/* Edit Modal */}
       <EditModal
-        title="Edit Personal Information"
-        isOpen={isPersonalInfoOpen}
-        onClose={onPersonalInfoClose}
-        onSave={handleSavePersonalInfo}
-        initialData={personalInfo}
-        fields={[
-          { label: "Name", name: "name", type: "text" },
-          { label: "Email", name: "email", type: "email" },
-          { label: "Phone", name: "phone", type: "text" },
-        ]}
-      />
-
-      <EditModal
-        title="Edit Education Information"
-        isOpen={isEducationInfoOpen}
-        onClose={onEducationInfoClose}
-        onSave={handleSaveEducationInfo}
-        initialData={educationInfo}
-        fields={[
-          { label: "Institution", name: "institution", type: "text" },
-          { label: "Degree", name: "degree", type: "text" },
-          { label: "Graduation Year", name: "graduationYear", type: "text" },
-        ]}
-      />
-
-      <EditModal
-        title="Edit Work Information"
-        isOpen={isWorkInfoOpen}
-        onClose={onWorkInfoClose}
-        onSave={handleSaveWorkInfo}
-        initialData={workInfo}
-        fields={[
-          { label: "Company", name: "company", type: "text" },
-          { label: "Role", name: "role", type: "text" },
-          { label: "Duration", name: "duration", type: "text" },
-        ]}
+        title={`Edit ${activeSection ? activeSection.replace(/([A-Z])/g, ' $1') : ''}`}
+        isOpen={isOpen}
+        onClose={onClose}
+        onSave={handleSave}
+        formData={formData}
+        onChange={handleInputChange}
+        section={activeSection}
       />
     </Container>
   );
 }
 
 // Section component for reusability
-const Section = ({ title, content, onEdit }) => (
-  <Box
-    p={4}
-    bg="white"
-    shadow="md"
-    rounded="md"
-    mb={6}
-    position="relative"
-  >
-    <Flex justifyContent="space-between" alignItems="center">
-      <Heading size="md" mb={2}>
-        {title}
-      </Heading>
-      <IconButton
-        icon={<EditIcon />}
-        onClick={onEdit}
-        variant="ghost"
-        colorScheme="blue"
-        aria-label="Edit"
-      />
-    </Flex>
-    {content}
+const Section = ({ title, children }) => (
+  <Box p={4} bg="white" shadow="md" rounded="md" mb={6}>
+    <Heading size="md" mb={4}>
+      {title}
+    </Heading>
+    {children}
   </Box>
 );
 
+// EditableField component for inline editing
+const EditableField = ({ label, value, onEdit }) => (
+  <Flex alignItems="center" mb={2}>
+    <Text fontWeight="bold" mr={2}>
+      {label}:
+    </Text>
+    <Text flex="1">{value}</Text>
+    <IconButton
+      icon={<EditIcon />}
+      onClick={onEdit}
+      variant="ghost"
+      colorScheme="blue"
+      size="sm"
+      aria-label="Edit"
+    />
+  </Flex>
+);
 // EditModal component for handling form input and modal
 const EditModal = ({
   title,
   isOpen,
   onClose,
   onSave,
-  initialData,
-  fields,
+  formData,
+  onChange,
+  section,
 }) => {
-  const [formData, setFormData] = useState(initialData);
-
-  // Update form data state on input change
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  // Handle form submission
-  const handleSubmit = () => {
-    onSave(formData);
-  };
+  const fields =
+    section === "profile"
+      ? [
+          { label: "Name", name: "name", type: "text" },
+          { label: "Title", name: "title", type: "text" },
+          { label: "Email", name: "email", type: "email" },
+          { label: "Phone", name: "phone", type: "text" },
+          { label: "Photo URL", name: "photo", type: "text" },
+        ]
+      : section === "education"
+      ? [
+          { label: "Institution", name: "institution", type: "text" },
+          { label: "Degree", name: "degree", type: "text" },
+          { label: "Graduation Year", name: "graduationYear", type: "text" },
+        ]
+      : section === "workExperience"
+      ? [
+          { label: "Company", name: "company", type: "text" },
+          { label: "Role", name: "role", type: "text" },
+          { label: "Duration", name: "duration", type: "text" },
+        ]
+      : [];
 
   return (
     <Modal isOpen={isOpen} onClose={onClose}>
@@ -225,7 +324,7 @@ const EditModal = ({
                   type={field.type}
                   name={field.name}
                   value={formData[field.name]}
-                  onChange={handleInputChange}
+                  onChange={onChange}
                 />
               </FormControl>
             ))}
@@ -235,7 +334,7 @@ const EditModal = ({
           <Button variant="outline" mr={3} onClick={onClose}>
             Cancel
           </Button>
-          <Button colorScheme="blue" onClick={handleSubmit}>
+          <Button colorScheme="blue" onClick={onSave}>
             Save
           </Button>
         </ModalFooter>
@@ -243,5 +342,9 @@ const EditModal = ({
     </Modal>
   );
 };
+          
 
+
+
+            
 export default App
