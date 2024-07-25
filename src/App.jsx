@@ -7,100 +7,241 @@ import './App.css'
 import {
   Box,
   Button,
-  Drawer,
-  DrawerBody,
-  DrawerFooter,
-  DrawerHeader,
-  DrawerOverlay,
-  DrawerContent,
-  useDisclosure,
-  VStack,
-  Text,
+  Container,
+  Flex,
   Heading,
-  HStack,
-} from '@chakra-ui/react';
+  IconButton,
+  Stack,
+  Text,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  FormControl,
+  FormLabel,
+  Input,
+  Textarea,
+} from "@chakra-ui/react";
+import { EditIcon } from "@chakra-ui/icons";
 
 function App() {
-  const { isOpen, onOpen, onClose } = useDisclosure(); // State for handling drawer visibility
-  const [activeDrawer, setActiveDrawer] = useState(null); // State for tracking which drawer is open
+  // State for tracking personal, education, and work information
+  const [personalInfo, setPersonalInfo] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+123456789",
+  });
+  const [educationInfo, setEducationInfo] = useState({
+    institution: "XYZ University",
+    degree: "Bachelor of Science",
+    graduationYear: "2024",
+  });
+  const [workInfo, setWorkInfo] = useState({
+    company: "ABC Corp",
+    role: "Software Developer",
+    duration: "2022 - Present",
+  });
 
-  const openDrawer = (drawer) => {
-    setActiveDrawer(drawer);
-    onOpen();
+  // Disclosure hooks for modals
+  const {
+    isOpen: isPersonalInfoOpen,
+    onOpen: onPersonalInfoOpen,
+    onClose: onPersonalInfoClose,
+  } = useDisclosure();
+  const {
+    isOpen: isEducationInfoOpen,
+    onOpen: onEducationInfoOpen,
+    onClose: onEducationInfoClose,
+  } = useDisclosure();
+  const {
+    isOpen: isWorkInfoOpen,
+    onOpen: onWorkInfoOpen,
+    onClose: onWorkInfoClose,
+  } = useDisclosure();
+
+  // Handlers for saving information
+  const handleSavePersonalInfo = (newInfo) => {
+    setPersonalInfo(newInfo);
+    onPersonalInfoClose();
+  };
+
+  const handleSaveEducationInfo = (newInfo) => {
+    setEducationInfo(newInfo);
+    onEducationInfoClose();
+  };
+
+  const handleSaveWorkInfo = (newInfo) => {
+    setWorkInfo(newInfo);
+    onWorkInfoClose();
   };
 
   return (
-    <Box display="flex" height="100vh" bg="gray.50">
-      {/* CV Display Area */}
-      <Box flex="1" p={4} overflowY="auto">
-        <Heading mb={4}>CV Preview</Heading>
-        <Text fontSize="lg">
-          This is where the CV that is being built will be displayed.
-        </Text>
-        {/* Additional CV content goes here */}
-      </Box>
+    <Container maxW="container.md" py={6}>
+      {/* Personal Information Section */}
+      <Section
+        title="Personal Information"
+        
+        content={
+          <>
+            <Text>Name: {personalInfo.name}</Text>
+            <Text>Email: {personalInfo.email}</Text>
+            <Text>Phone: {personalInfo.phone}</Text>
+          </>
+        }
+        onEdit={onPersonalInfoOpen}
+      />
 
-      {/* Sidebar with Drawers */}
-      <Box width="300px" bg="white" shadow="md" p={4}>
-        <VStack spacing={4} align="stretch">
-          <Button onClick={() => openDrawer('personalInfo')} colorScheme="blue">
-            Personal Information
-          </Button>
-          <Button onClick={() => openDrawer('education')} colorScheme="blue">
-            Education Information
-          </Button>
-          <Button onClick={() => openDrawer('work')} colorScheme="blue">
-            Work Information
-          </Button>
-        </VStack>
-      </Box>
+      {/* Education Information Section */}
+      <Section
+        title="Education Information"
+        content={
+          <>
+            <Text>Institution: {educationInfo.institution}</Text>
+            <Text>Degree: {educationInfo.degree}</Text>
+            <Text>Graduation Year: {educationInfo.graduationYear}</Text>
+          </>
+        }
+        onEdit={onEducationInfoOpen}
+      />
 
-      {/* Drawer */}
-      <Drawer
-        isOpen={isOpen}
-        placement="right"
-        onClose={onClose}
-        size="md"
-      >
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerHeader>
-            {activeDrawer === 'personalInfo' && 'Personal Information'}
-            {activeDrawer === 'education' && 'Education Information'}
-            {activeDrawer === 'work' && 'Work Information'}
-          </DrawerHeader>
+      {/* Work Experience Information Section */}
+      <Section
+        title="Work Experience"
+        content={
+          <>
+            <Text>Company: {workInfo.company}</Text>
+            <Text>Role: {workInfo.role}</Text>
+            <Text>Duration: {workInfo.duration}</Text>
+          </>
+        }
+        onEdit={onWorkInfoOpen}
+      />
 
-          <DrawerBody>
-            {activeDrawer === 'personalInfo' && (
-              <Box>
-                <Text>Enter your personal details here...</Text>
-                {/* Add form fields or other content here */}
-              </Box>
-            )}
-            {activeDrawer === 'education' && (
-              <Box>
-                <Text>Enter your educational details here...</Text>
-                {/* Add form fields or other content here */}
-              </Box>
-            )}
-            {activeDrawer === 'work' && (
-              <Box>
-                <Text>Enter your work experience here...</Text>
-                {/* Add form fields or other content here */}
-              </Box>
-            )}
-          </DrawerBody>
+      {/* Modals for Editing Information */}
+      <EditModal
+        title="Edit Personal Information"
+        isOpen={isPersonalInfoOpen}
+        onClose={onPersonalInfoClose}
+        onSave={handleSavePersonalInfo}
+        initialData={personalInfo}
+        fields={[
+          { label: "Name", name: "name", type: "text" },
+          { label: "Email", name: "email", type: "email" },
+          { label: "Phone", name: "phone", type: "text" },
+        ]}
+      />
 
-          <DrawerFooter>
-            <Button variant="outline" mr={3} onClick={onClose}>
-              Close
-            </Button>
-            <Button colorScheme="blue">Save</Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
-    </Box>
+      <EditModal
+        title="Edit Education Information"
+        isOpen={isEducationInfoOpen}
+        onClose={onEducationInfoClose}
+        onSave={handleSaveEducationInfo}
+        initialData={educationInfo}
+        fields={[
+          { label: "Institution", name: "institution", type: "text" },
+          { label: "Degree", name: "degree", type: "text" },
+          { label: "Graduation Year", name: "graduationYear", type: "text" },
+        ]}
+      />
+
+      <EditModal
+        title="Edit Work Information"
+        isOpen={isWorkInfoOpen}
+        onClose={onWorkInfoClose}
+        onSave={handleSaveWorkInfo}
+        initialData={workInfo}
+        fields={[
+          { label: "Company", name: "company", type: "text" },
+          { label: "Role", name: "role", type: "text" },
+          { label: "Duration", name: "duration", type: "text" },
+        ]}
+      />
+    </Container>
   );
 }
+
+// Section component for reusability
+const Section = ({ title, content, onEdit }) => (
+  <Box
+    p={4}
+    bg="white"
+    shadow="md"
+    rounded="md"
+    mb={6}
+    position="relative"
+  >
+    <Flex justifyContent="space-between" alignItems="center">
+      <Heading size="md" mb={2}>
+        {title}
+      </Heading>
+      <IconButton
+        icon={<EditIcon />}
+        onClick={onEdit}
+        variant="ghost"
+        colorScheme="blue"
+        aria-label="Edit"
+      />
+    </Flex>
+    {content}
+  </Box>
+);
+
+// EditModal component for handling form input and modal
+const EditModal = ({
+  title,
+  isOpen,
+  onClose,
+  onSave,
+  initialData,
+  fields,
+}) => {
+  const [formData, setFormData] = useState(initialData);
+
+  // Update form data state on input change
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle form submission
+  const handleSubmit = () => {
+    onSave(formData);
+  };
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose}>
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>{title}</ModalHeader>
+        <ModalBody>
+          <Stack spacing={4}>
+            {fields.map((field) => (
+              <FormControl key={field.name}>
+                <FormLabel>{field.label}</FormLabel>
+                <Input
+                  type={field.type}
+                  name={field.name}
+                  value={formData[field.name]}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+            ))}
+          </Stack>
+        </ModalBody>
+        <ModalFooter>
+          <Button variant="outline" mr={3} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button colorScheme="blue" onClick={handleSubmit}>
+            Save
+          </Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+};
 
 export default App
